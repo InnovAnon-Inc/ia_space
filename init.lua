@@ -201,3 +201,217 @@ end)
 --        return true
 --    end,
 --})
+
+
+
+
+
+-- ia_space/init.lua
+
+-- Configuration
+local SPACE_THRESHOLD = 10000
+local VACUUM_NODE = "ia_space:vacuum"
+local AIR_NODE = "air"
+local ATMOSPHERE_COLOR = {
+    day_sky = "#8cbaff", day_horizon = "#b4bafa",
+    dawn_sky = "#b4bafa", dawn_horizon = "#b4bafa",
+    night_sky = "#006aff", night_horizon = "#4090ff",
+    indoors = "#646464",
+}
+
+-- Use assertions to ensure dependencies are present
+assert(player_monoids, "ia_space requires player_monoids")
+
+local function update_space_physics(player, is_in_space)
+    if is_in_space then
+        -- Low gravity, high jump
+        player_monoids.gravity:add_change(player, 0.1, "ia_space:gravity")
+        player_monoids.jump:add_change(player, 1.5, "ia_space:jump")
+    else
+        -- Remove changes to let other mods (or default) take over
+        player_monoids.gravity:del_change(player, "ia_space:gravity")
+        player_monoids.jump:del_change(player, "ia_space:jump")
+    end
+end
+
+--
+-- NOTE
+--
+
+--ia_space.registered_suits = {}
+--
+--function ia_space.register_suit(name)
+--    ia_space.registered_suits[name] = true
+--end
+--
+---- FIXME use airtanks
+--local function is_protected(player)
+--    -- Check armor for protection
+--    if minetest.get_modpath("3d_armor") and armor and armor.def then
+--        local name = player:get_player_name()
+--        if armor.def[name] and armor.def[name].groups.space_suit then
+--            return true
+--        end
+--    end
+--    return false
+--end
+
+--
+--
+--
+
+--local function handle_space_effects(player, pos)
+--    local name = player:get_player_name()
+--    local head_pos = vector.add(pos, {x=0, y=1.5, z=0})
+--    local node_at_head = minetest.get_node(head_pos).name
+--    
+--    local in_space_zone = pos.y > SPACE_THRESHOLD
+--    local in_vacuum = (node_at_head == VACUUM_NODE)
+--
+--    -- 1. Physics & Sky
+--    if in_space_zone then
+--        update_space_physics(player, true)
+--        
+--        -- Set Space Sky
+--        player:set_sky({
+--            type = "plain",
+--            base_color = "#000000",
+--            clouds = false,
+--        })
+--    else
+--        update_space_physics(player, false)
+--        
+--        -- Restore Sky (Only if we were the ones who changed it)
+--        -- Note: A more advanced version would use a Sky Monoid if available
+--        player:set_sky({
+--            type = "regular",
+--            clouds = true,
+--            sky_color = ATMOSPHERE_COLOR,
+--        })
+--    end
+--
+--    -- 2. Survival Logic
+--    if in_vacuum and not is_protected(player) then
+--        local breath = player:get_breath()
+--        if breath > 0 then
+--            player:set_breath(math.max(0, breath - 2))
+--        else
+--            player:set_hp(player:get_hp() - 2)
+--            -- Visual feedback for hypoxia
+--            player:set_sky({base_color = "#220000", type = "plain"})
+--        end
+--    end
+--end
+
+local timer = 0
+minetest.register_globalstep(function(dtime)
+    timer = timer + dtime
+    if timer < 0.5 then return end -- Space needs slightly faster updates than thermal
+    timer = 0
+
+    for _, player in ipairs(ia_names.get_all_actors()) do
+        local pos = player:get_pos()
+        if pos then
+            handle_space_effects(player, pos)
+        end
+    end
+end)
+
+local MANTLE_THRESHOLD = -20000
+
+minetest.register_on_generated(function(minp, maxp, seed)
+    -- Handle Space (Existing)
+    if maxp.y > SPACE_THRESHOLD then
+        -- [Existing Vacuum Mapgen Logic]
+    end
+
+    -- Handle Mantle (New)
+    if minp.y < MANTLE_THRESHOLD then
+        local vm, emin, emax = minetest.get_mapgen_object("voxelmanip")
+        local area = VoxelArea:new({MinEdge = emin, MaxEdge = emax})
+        local data = vm:get_data()
+        local c_lava = minetest.get_content_id("default:lava_source")
+        local c_stone = minetest.get_content_id("default:stone")
+
+        for i in area:iter(minp.x, minp.y, minp.z, maxp.x, math.min(maxp.y, MANTLE_THRESHOLD), maxp.z) do
+            -- Replace air/stone with lava to simulate the core
+            if data[i] ~= minetest.CONTENT_IGNORE then
+                data[i] = c_lava
+            end
+        end
+        vm:set_data(data)
+        vm:write_to_map()
+    end
+end)
+
+-- ia_space/init.lua
+
+-- Helper to check if the player has a breathing tube in their hotbar
+local function has_breathing_tube(player)
+    local inv = player:get_inventory()
+    local hotbar_size = player:hud_get_hotbar_itemcount()
+    for i = 1, hotbar_size do
+        if inv:get_stack("main", i):get_name() == "airtanks:breathing_tube" then
+            return true
+        end
+    end
+    return false
+end
+
+-- Helper to check for any charged air tank in the hotbar
+local function has_charged_tank(player)
+    local inv = player:get_inventory()
+    local hotbar_size = player:hud_get_hotbar_itemcount()
+    for i = 1, hotbar_size do
+        local stack = inv:get_stack("main", i)
+        -- airtanks uses group 'airtank' > 1 for full/partially full tanks
+        if minetest.get_item_group(stack:get_name(), "airtank") > 1 then
+            return true
+        end
+    end
+    return false
+end
+
+local function handle_space_zone(player, pos)
+    local in_space_zone = pos.y > SPACE_THRESHOLD
+    if in_space_zone then
+        update_space_physics(player, true)
+        player:set_sky({ type = "plain", base_color = "#000000", clouds = false })
+    else
+        update_space_physics(player, false)
+        player:set_sky({ type = "regular", clouds = true, sky_color = ATMOSPHERE_COLOR })
+    end
+end
+local function handle_vacuum_zone(player, pos)
+    local head_pos = vector.add(pos, {x=0, y=1.5, z=0})
+    local node_at_head = minetest.get_node(head_pos).name
+
+    local in_vacuum = (node_at_head == VACUUM_NODE)
+
+    if in_vacuum then
+        local breath = player:get_breath()
+
+        -- If player has gear, we just let them "breathe" normally
+        -- (Airtanks mod will handle the replenishment automatically when breath < 5)
+        if has_breathing_tube(player) and has_charged_tank(player) then
+            -- We slowly drain breath to force the Breathing Tube to activate
+            if breath > 6 then
+                player:set_breath(breath - 1)
+            end
+        else
+            -- No gear: Rapid suffocation
+            if breath > 0 then
+                player:set_breath(math.max(0, breath - 2))
+            else
+                player:set_hp(player:get_hp() - 2)
+                -- Hypoxia Visual
+                player:set_sky({base_color = "#220000", type = "plain"})
+            end
+        end
+    end
+end
+
+local function handle_space_effects(player, pos)
+	handle_space_zone(player, pos)
+	handle_vacuum_zone(player, pos)
+end
