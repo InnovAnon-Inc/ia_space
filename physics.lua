@@ -10,7 +10,7 @@ local ATMOSPHERE_COLOR = {
 
 -- Helper: Get Tidal Offset from tidesandfloods
 local function get_tide_offset()
-    if tidesandfloods and tidesandfloods.sealevel then
+    if minetest.get_modpath('tidesandfloods') and tidesandfloods and tidesandfloods.sealevel then
         local base_level = tonumber(minetest.get_mapgen_setting("water_level")) or 1
         return tidesandfloods.sealevel - base_level
     end
