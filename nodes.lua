@@ -1,14 +1,21 @@
 -- ia_space/nodes.lua
-local VACUUM_NODE = "ia_space:vacuum"
 
-minetest.register_node(VACUUM_NODE, {
-    description = "Vacuum of Space",
-    drawtype = "airlike",
-    paramtype = "light",
+minetest.register_node(ia_space.nodes.vacuum, {
+    description         = "Vacuum of Space",
+    drawtype            = "airlike",
+    paramtype           = "light",
     sunlight_propagates = true,
-    walkable = false,
-    pointable = false,
-    diggable = false,
-    buildable_to = true,
-    groups = {vacuum = 1, not_in_creative_inventory = 1},
+    post_effect_color   = {r = 0, g = 0, b = 0, a = 20,},
+    walkable            = false,
+    pointable           = false,
+    diggable            = false,
+    buildable_to        = true,
+    groups              = {
+        vacuum                    = 1,
+	not_in_creative_inventory = 1,
+        is_air_like               = 1, -- Terrestrial vacuums might eventually use this to interact with air-tightness mods
+    },
+    drop                = "",
 })
+
+-- TODO maybe create a terrestrial vacuum node, too (for vacuums in the lab down on earth)... should probably cancel out with enough air surrounding it... that mechanic might also work for patching air leaks in space

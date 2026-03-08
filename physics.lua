@@ -1,64 +1,84 @@
 -- ia_space/physics.lua
-local BASE_SPACE_THRESHOLD = 10000
-local VACUUM_NODE = "ia_space:vacuum"
-local ATMOSPHERE_COLOR = {
-    day_sky = "#8cbaff", day_horizon = "#b4bafa",
-    dawn_sky = "#b4bafa", dawn_horizon = "#b4bafa",
-    night_sky = "#006aff", night_horizon = "#4090ff",
-    indoors = "#646464",
-}
 
--- Helper: Get Tidal Offset from tidesandfloods
-local function get_tide_offset()
-    if minetest.get_modpath('tidesandfloods') and tidesandfloods and tidesandfloods.sealevel then
-        local base_level = tonumber(minetest.get_mapgen_setting("water_level")) or 1
-        return tidesandfloods.sealevel - base_level
-    end
-    return 0
+function ia_space.set_sky(player, sky) -- TODO better monoid
+    assert(player ~= nil)
+    if minetest.get_modpath("climate_api") then return end
+    player:set_sky(sky)
 end
 
-local function handle_space_zone(player, pos)
-    local tide_mod = get_tide_offset()
-    local dynamic_threshold = BASE_SPACE_THRESHOLD + tide_mod
-    
-    if pos.y > dynamic_threshold then
-        player_monoids.gravity:add_change(player, 0.1, "ia_space:gravity")
-        player_monoids.jump:add_change(player, 1.5, "ia_space:jump")
-        player:set_sky({ type = "plain", base_color = "#000000", clouds = false })
+-- TODO does gravity decay as we go up ? what happens in the mantle, for that matter ?
+local function handle_in_space(player, pos)
+    assert(player ~= nil)
+    assert(ia_space.is_strictly_above_dynamic_space_threshold(pos))
+    player_monoids.gravity:add_change(player, 0.1, ia_space.effects.gravity) -- TODO parametrize ?
+    player_monoids.jump   :add_change(player, 1.5, ia_space.effects.jump) -- TODO parametrize ?
+    ia_space              .set_sky   (player, {
+	base_color = ia_space.colors.space_black,
+	clouds     = false,
+	type       = "plain",
+    })
+end
+
+local function handle_not_in_space(player, pos)
+    assert(player ~= nil)
+    assert(ia_space.is_below_dynamic_space_threshold(pos))
+    player_monoids.gravity:del_change(player,      ia_space.effects.gravity)
+    player_monoids.jump   :del_change(player,      ia_space.effects.jump)
+    ia_space              .set_sky   (player, {
+	clouds     = true, 
+	sky_color  = ia_space.atmosphere_colors,
+	type       = "regular",
+    })
+end
+
+function ia_space.handle_space_zone(player, pos) -- exposed in case ... idk man... terrestrial labs and stuff
+    assert(player ~= nil)
+    if ia_space.is_strictly_above_dynamic_space_threshold(pos) then
+        handle_in_space(player, pos)
+	return
+    end
+    handle_not_in_space(player, pos)
+end
+
+function ia_space.handle_vacuum_zone(player, pos)
+    assert(player ~= nil)
+    if not ia_space.is_head_in_vacuum(pos) then return end
+
+    local breath = player :get_breath()
+    if breath > 0 then
+        player            :set_breath(math.max(0, breath - 2)) -- Rapid breath loss in vacuum
     else
-        player_monoids.gravity:del_change(player, "ia_space:gravity")
-        player_monoids.jump:del_change(player, "ia_space:jump")
-        player:set_sky({ type = "regular", clouds = true, sky_color = ATMOSPHERE_COLOR })
+        player            :set_hp(player:get_hp() - 2) -- Damage and visual feedback for suffocation
+        ia_space          .set_sky(player, { -- Red flash/tint for suffocation
+            base_color = ia_space.colors.suffocate_red,
+            type       = "plain",
+        })
     end
 end
 
-local function handle_vacuum_zone(player, pos)
-    local head_pos = vector.add(pos, {x=0, y=1.5, z=0})
-    local node_at_head = minetest.get_node(head_pos).name
+local timer      = 0
+local sleep_time = 0.5
 
-    if node_at_head == VACUUM_NODE then
-        local breath = player:get_breath()
-        if breath > 0 then
-            player:set_breath(math.max(0, breath - 2))
-        else
-            player:set_hp(player:get_hp() - 2)
-            player:set_sky({base_color = "#220000", type = "plain"})
-        end
-    end
+local function is_sleeping(dtime)
+    return (timer < sleep_time)
 end
 
-local timer = 0
+local function handle_sleep(dtime)
+    timer        = (timer + dtime)
+    if is_sleeping(dtime) then return false end
+    timer        = 0
+    return true
+end
+
 minetest.register_globalstep(function(dtime)
-    timer = timer + dtime
-    if timer < 0.5 then return end
-    timer = 0
+    if not handle_sleep(dtime) then return end
 
     --for _, player in ipairs(ia_names.get_all_actors()) do
     for _, player in ipairs(minetest.get_connected_players()) do
         local pos = player:get_pos()
         if pos then
-            handle_space_zone(player, pos)
-            handle_vacuum_zone(player, pos)
+            ia_space.handle_space_zone (player, pos)
+            ia_space.handle_vacuum_zone(player, pos)
         end
     end
 end)
