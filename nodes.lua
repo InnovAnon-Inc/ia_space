@@ -18,4 +18,6 @@ minetest.register_node(ia_space.nodes.vacuum, {
     drop                = "",
 })
 
+-- TODO probably need an abm to handle hull breaches (vacuum of space should eat air nodes... but not naively... probably y-value aware, air/vacuum "density" aware, etc)
+
 -- TODO maybe create a terrestrial vacuum node, too (for vacuums in the lab down on earth)... should probably cancel out with enough air surrounding it... that mechanic might also work for patching air leaks in space

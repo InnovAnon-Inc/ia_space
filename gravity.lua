@@ -71,37 +71,43 @@ function ia_space.calculate_gravity_multiplier(pos)
 end
 
 function ia_space.calculate_jump_multiplier(grav_mult, pos)
-    assert(grav_mult ~= nil or pos ~= nil)
-    assert(grav_mult ~= nil or pos ~= nil and pos.y ~= nil)
+    --assert(grav_mult ~= nil or pos ~= nil)
+    --assert(grav_mult ~= nil or pos ~= nil and pos.y ~= nil)
     local grav_mult = grav_mult or ia_space.calculate_gravity_multiplier(pos)
     return (1.0 / math.sqrt(grav_mult)) -- TODO optional 1/g ?
 end
 
-function ia_space.handle_gravity(player, pos)
+function ia_space.handle_gravity(player)
     assert(player ~= nil)
     assert(player:is_player())
+    local pos       = player:get_pos()
+    assert(pos    ~= nil)
     local grav_mult = ia_space.calculate_gravity_multiplier(pos)
     player_monoids.gravity:add_change(player, grav_mult, ia_space.effects.gravity)
     return grav_mult
 end
 
-function ia_space.handle_jump(player, grav_mult, pos)
+function ia_space.handle_jump(player, grav_mult)
     assert(player    ~= nil)
     assert(player:is_player())
-    assert(grav_mult ~= nil or  pos ~= nil)
-    assert(grav_mult ~= nil or  pos ~= nil and pos.y ~= nil)
+    --assert(grav_mult ~= nil or  pos ~= nil)
+    --assert(grav_mult ~= nil or  pos ~= nil and pos.y ~= nil)
+    local pos       = player:get_pos()
+    assert(pos ~= nil)
     local jump_mult = ia_space.calculate_jump_multiplier(grav_mult, pos)
     player_monoids.jump:add_change(player, jump_mult, ia_space.effects.jump)
     return jump_mult
 end
 
-function ia_space.handle_gravity_and_jump(player, pos)
+function ia_space.handle_gravity_and_jump(player)
     assert(player    ~= nil)
     assert(player:is_player())
-    assert(pos       ~= nil)
-    local grav_mult = ia_space.handle_gravity(player, pos)
+    --local pos = player:get_pos()
+    --assert(pos       ~= nil)
+    local grav_mult = ia_space.handle_gravity(player)
     assert(grav_mult ~= nil)
     local jump_mult = ia_space.handle_jump   (player, grav_mult, nil)
 
-    minetest.log("action", string.format("[ia_space] Crust Depth Y: %d, Grav: %.3f, Jump: %.3f", pos.y, grav_mult, jump_mult))
+    --minetest.log("action", string.format("[ia_space] Crust Depth Y: %d, Grav: %.3f, Jump: %.3f", pos.y, grav_mult, jump_mult))
+    --minetest.log("action", string.format("[ia_space] Grav: %.3f, Jump: %.3f", grav_mult, jump_mult))
 end

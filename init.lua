@@ -7,7 +7,10 @@
 --
 -- TODO nodes.lua
 -- TODO tides.lua
--- TODO weather.lua
+-- TODO weather.lua / space.lua (skybox sun problem)
+--
+-- TODO technic / radiation
+-- TODO 3d armor
 
 assert(minetest.get_modpath('ia_util'))
 assert(ia_util ~= nil)
@@ -47,15 +50,24 @@ ia_space.nodes                   = {
     vacuum      = modname..':vacuum'
 }
 ia_space.thresholds              = {
-    mantle    = -20000,
-    sealevel  = tonumber(minetest.get_mapgen_setting('water_level')) or 1,
-    amplitude =      2.5, -- Max height in nodes (sealevel)
-    space     =  10000,
+    mantle     = -20000,
+    sealevel   = tonumber(minetest.get_mapgen_setting('water_level')) or 1,
+    amplitude  =      2.5, -- Max height in nodes (sealevel)
+    space      =  10000,
+    -- Artistic/Realism tuning:
+    -- 0.1 means the top 10% of the atmosphere is the fade zone.
+    meso_ratio =      0.15,
+}
+ia_space.physics                 = {
+    gravity          = tonumber(minetest.settings:get('movement_gravity')) or 9.81, -- not used
+    heat_damage_mult =  0.5,
+    mach_threshold   = 20, -- Speed at which heating begins (nodes per second)
 }
 ia_space.weathers                = {
-    mantle = modname..':mantle',
+    mantle     = modname..':mantle',
     -- TODO ocean ?
-    space  = modname..':space',
+    mesosphere = modname..':mesosphere',
+    space      = modname..':space',
 }
 
 function ia_space.get_world_limits()
@@ -80,8 +92,12 @@ local modpath = minetest.get_modpath(modname)
 dofile(modpath..DIR_DELIM..'nodes.lua')
 dofile(modpath..DIR_DELIM..'mapgen.lua')
 dofile(modpath..DIR_DELIM..'gravity.lua')
+dofile(modpath..DIR_DELIM..'mantle.lua')
+dofile(modpath..DIR_DELIM..'mesosphere.lua')
 dofile(modpath..DIR_DELIM..'physics.lua')
 dofile(modpath..DIR_DELIM..'predicates.lua')
+dofile(modpath..DIR_DELIM..'reentry.lua')
+dofile(modpath..DIR_DELIM..'space.lua')
 dofile(modpath..DIR_DELIM..'tides.lua')
 dofile(modpath..DIR_DELIM..'weather.lua')
 local log                        = ia_util.get_logger(modname)

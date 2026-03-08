@@ -1,13 +1,9 @@
 -- ia_space/physics.lua
 
-function ia_space.set_sky(player, sky) -- TODO better monoid
+local function handle_in_space(player)
     assert(player ~= nil)
-    if minetest.get_modpath("climate_api") then return end
-    player:set_sky(sky)
-end
-
-local function handle_in_space(player, pos)
-    assert(player ~= nil)
+    local pos = player:get_pos()
+    assert(pos    ~= nil)
     assert(ia_space.is_strictly_above_dynamic_space_threshold(pos))
 --    player_monoids.gravity:add_change(player, 0.1, ia_space.effects.gravity)
 --    player_monoids.jump   :add_change(player, 1.5, ia_space.effects.jump)
@@ -19,8 +15,10 @@ local function handle_in_space(player, pos)
     })
 end
 
-local function handle_not_in_space(player, pos)
+local function handle_not_in_space(player) -- TODO refactor to respect mesosphere gradiant; climate_api optional
     assert(player ~= nil)
+    local pos = player:get_pos()
+    assert(pos    ~= nil)
     assert(ia_space.is_below_dynamic_space_threshold(pos))
     player_monoids.gravity:del_change(player,      ia_space.effects.gravity)
     player_monoids.jump   :del_change(player,      ia_space.effects.jump)
@@ -31,17 +29,22 @@ local function handle_not_in_space(player, pos)
     })
 end
 
-function ia_space.handle_space_zone(player, pos) -- exposed in case ... idk man... terrestrial labs and stuff
+function ia_space.handle_space_zone(player) -- exposed in case ... idk man... terrestrial labs and stuff
     assert(player ~= nil)
+    local pos = player:get_pos()
+    assert(pos    ~= nil)
     if ia_space.is_strictly_above_dynamic_space_threshold(pos) then
-        handle_in_space(player, pos)
+        handle_in_space(player)
 	return
     end
-    handle_not_in_space(player, pos)
+    assert(ia_space.is_below_dynamic_space_threshold(pos))
+    handle_not_in_space(player)
 end
 
-function ia_space.handle_vacuum_zone(player, pos)
+function ia_space.handle_vacuum_zone(player)
     assert(player ~= nil)
+    local pos = player:get_pos()
+    assert(pos    ~= nil)
     if not ia_space.is_head_in_vacuum(pos) then return end
 
     local breath = player :get_breath()
@@ -77,8 +80,10 @@ minetest.register_globalstep(function(dtime)
     for _, player in ipairs(minetest.get_connected_players()) do
         local pos = player:get_pos()
         if pos then
-            ia_space.handle_space_zone (player, pos)
-            ia_space.handle_vacuum_zone(player, pos)
+            ia_space.handle_space_zone     (player)
+            ia_space.handle_vacuum_zone    (player)
+	    ia_space.handle_reentry_physics(player)
         end
     end
 end)
+
