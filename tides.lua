@@ -1,26 +1,31 @@
 -- ia_space/tides.lua
 
-function ia_space.get_tidesandfloods_threshold()
+-- TODO position-aware ?
+
+function ia_space.get_tidesandfloods_offset()
     assert(minetest.get_modpath('tidesandfloods'))
     return (tidesandfloods.sealevel - ia_space.thresholds.sealevel)
 end
 
-function ia_space.get_tides_threshold()
+function ia_space.get_tides_offset()
     assert(minetest.get_modpath('tides'))
-    local tod        = minetest.get_timeofday()
+    local tod = minetest.get_timeofday()
     return 2*math.sin(2*math.pi*tod)
 end
 
 -- Helper: Get Tidal Offset from tidesandfloods
-function ia_space.get_sealevel_threshold()
+function ia_space.get_sealevel_offset()
     if minetest.get_modpath('tidesandfloods') then
-	return ia_space.get_tidesandfloods_threshold()
+	return ia_space.get_tidesandfloods_offset()
     end
     if minetest.get_modpath('tides') then
-	return ia_space.get_tides_threshold()
+	return ia_space.get_tides_offset()
     end
-    -- TODO 
-    return ia_space.thresholds.sealevel
+    return ia_space.get_simulated_tide()
+end
+
+function ia_space.get_sealevel_threshold()
+    return (ia_space.thresholds.sealevel + ia_space.get_sealevel_offset())
 end
 
 function ia_space.get_space_threshold()
@@ -56,8 +61,8 @@ end
 
 -- TODO solar times ?
 
-function ia_space.get_simulated_tide()
-    local time_hours = ia_space.get_gametime_hours()
+function ia_space.get_simulated_tide(time_hours)
+    local time_hours = (time_hours or ia_space.get_gametime_hours())
     local m2         = ia_space.get_m2_tide(time_hours)
     local s2         = ia_space.get_s2_tide(time_hours)
     -- When in     phase: Spring Tide (High Highs, Low Lows)

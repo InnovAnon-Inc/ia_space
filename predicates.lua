@@ -35,6 +35,67 @@ function ia_space.is_strictly_above_space_threshold(pos)
 end
 
 --
+-- static sealevel thresholdd
+--
+
+function ia_space.is_strictly_below_sealevel_threshold(pos)
+    assert(pos   ~= nil, 'no pos')
+    assert(pos.y ~= nil, 'missing y-value')
+    local sealevel = ia_space.thresholds.sealevel
+    return (pos.y <  sealevel)
+end
+
+function ia_space.is_below_sealevel_threshold(pos)
+    assert(pos   ~= nil, 'no pos')
+    assert(pos.y ~= nil, 'missing y-value')
+    local sealevel = ia_space.thresholds.sealevel
+    return (pos.y <= sealevel)
+end
+
+function ia_space.is_at_sealevel_threshold(pos)
+    assert(pos   ~= nil, 'no pos')
+    assert(pos.y ~= nil, 'missing y-value')
+    local sealevel = ia_space.thresholds.sealevel
+    return (pos.y == sealevel)
+end
+
+function ia_space.is_above_sealevel_threshold(pos)
+    assert(pos   ~= nil, 'no pos')
+    assert(pos.y ~= nil, 'missing y-value')
+    local sealevel = ia_space.thresholds.sealevel
+    return (pos.y >= sealevel)
+end
+
+function ia_space.is_strictly_above_sealevel_threshold(pos)
+    assert(pos   ~= nil, 'no pos')
+    assert(pos.y ~= nil, 'missing y-value')
+    local sealevel = ia_space.thresholds.sealevel
+    return (pos.y >  sealevel)
+end
+
+function ia_space.is_strictly_between_mantle_and_sealevel_thresholds(pos)
+    assert(pos   ~= nil, 'no pos')
+    assert(pos.y ~= nil, 'missing y-value')
+    assert(ia_space.thresholds.mantle < ia_space.thresholds.sealevel)
+    if ia_space.is_below_mantle_threshold  (pos) then return false end
+    if ia_space.is_above_sealevel_threshold(pos) then return false end
+    assert(ia_space.is_strictly_above_mantle_threshold  (pos))
+    assert(ia_space.is_strictly_below_sealevel_threshold(pos))
+    return true
+end
+
+function ia_space.is_strictly_between_sealevel_and_space_thresholds(pos)
+    assert(pos   ~= nil, 'no pos')
+    assert(pos.y ~= nil, 'missing y-value')
+    assert(ia_space.thresholds.sealevel < ia_space.thresholds.space)
+    if ia_space.is_below_sealevel_threshold(pos) then return false end
+    if ia_space.is_above_space_threshold   (pos) then return false end
+    assert(ia_space.is_strictly_above_sealevel_threshold(pos))
+    assert(ia_space.is_strictly_below_space_threshold   (pos))
+    return true
+end
+
+--
 -- mantle threshold
 --
 
@@ -134,6 +195,67 @@ function ia_space.is_strictly_between_mantle_and_dynamic_space_thresholds(pos)
     if ia_space.is_above_dynamic_space_threshold (pos) then return false end
     assert(ia_space.is_strictly_above_mantle_threshold        (pos))
     assert(ia_space.is_strictly_below_dynamic_space_threshold (pos))
+    return true
+end
+
+--
+--
+--
+
+function ia_space.is_strictly_below_dynamic_sealevel_threshold(pos)
+    assert(pos   ~= nil, 'no pos')
+    assert(pos.y ~= nil, 'missing y-value')
+    local sealevel = ia_space.get_sealevel_threshold()
+    return (pos.y <  sealevel)
+end
+
+function ia_space.is_below_dynamic_sealevel_threshold(pos)
+    assert(pos   ~= nil, 'no pos')
+    assert(pos.y ~= nil, 'missing y-value')
+    local sealevel = ia_space.get_sealevel_threshold()
+    return (pos.y <= sealevel)
+end
+
+function ia_space.is_at_dynamic_sealevel_threshold(pos)
+    assert(pos   ~= nil, 'no pos')
+    assert(pos.y ~= nil, 'missing y-value')
+    local sealevel = ia_space.get_sealevel_threshold()
+    return (pos.y == sealevel)
+end
+
+function ia_space.is_above_dynamic_sealevel_threshold(pos)
+    assert(pos   ~= nil, 'no pos')
+    assert(pos.y ~= nil, 'missing y-value')
+    local sealevel = ia_space.get_sealevel_threshold()
+    return (pos.y >= sealevel)
+end
+
+function ia_space.is_strictly_above_dynamic_sealevel_threshold(pos)
+    assert(pos   ~= nil, 'no pos')
+    assert(pos.y ~= nil, 'missing y-value')
+    local sealevel = ia_space.get_sealevel_threshold()
+    return (pos.y >  sealevel)
+end
+
+function ia_space.is_strictly_between_mantle_and_dynamic_sealevel_thresholds(pos)
+    assert(pos   ~= nil, 'no pos')
+    assert(pos.y ~= nil, 'missing y-value')
+    assert(ia_space.thresholds.mantle < ia_space.get_sealevel_threshold())
+    if ia_space.is_below_mantle_threshold          (pos) then return false end
+    if ia_space.is_above_dynamic_sealevel_threshold(pos) then return false end
+    assert(ia_space.is_strictly_above_mantle_threshold          (pos))
+    assert(ia_space.is_strictly_below_dynamic_sealevel_threshold(pos))
+    return true
+end
+
+function ia_space.is_strictly_between_dynamic_sealevel_and_dynamic_space_thresholds(pos)
+    assert(pos   ~= nil, 'no pos')
+    assert(pos.y ~= nil, 'missing y-value')
+    assert(ia_space.get_sealevel_threshold() < ia_space.get_space_threshold())
+    if ia_space.is_below_dynamic_sealevel_threshold(pos) then return false end
+    if ia_space.is_above_dynamic_space_threshold   (pos) then return false end
+    assert(ia_space.is_strictly_above_dynamic_sealevel_threshold(pos))
+    assert(ia_space.is_strictly_below_dynamic_space_threshold   (pos))
     return true
 end
 

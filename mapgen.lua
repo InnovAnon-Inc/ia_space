@@ -59,3 +59,7 @@ function ia_space.on_generated(minp, maxp, seed)
     changed              = writeback(vm, data, changed)
 end
 minetest.register_on_generated(ia_space.on_generated)
+
+-- TODO bigger oceans ? / tsumanis (or like... big, deep ocean waves)
+-- TODO world limits
+-- TODO sealevel metadata ? / tides

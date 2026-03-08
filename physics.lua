@@ -6,12 +6,12 @@ function ia_space.set_sky(player, sky) -- TODO better monoid
     player:set_sky(sky)
 end
 
--- TODO does gravity decay as we go up ? what happens in the mantle, for that matter ?
 local function handle_in_space(player, pos)
     assert(player ~= nil)
     assert(ia_space.is_strictly_above_dynamic_space_threshold(pos))
-    player_monoids.gravity:add_change(player, 0.1, ia_space.effects.gravity) -- TODO parametrize ?
-    player_monoids.jump   :add_change(player, 1.5, ia_space.effects.jump) -- TODO parametrize ?
+--    player_monoids.gravity:add_change(player, 0.1, ia_space.effects.gravity)
+--    player_monoids.jump   :add_change(player, 1.5, ia_space.effects.jump)
+    ia_space.handle_gravity_and_jump(player, pos)
     ia_space              .set_sky   (player, {
 	base_color = ia_space.colors.space_black,
 	clouds     = false,
@@ -59,19 +59,19 @@ end
 local timer      = 0
 local sleep_time = 0.5
 
-local function is_sleeping(dtime)
+local function is_globalstep_sleeping(dtime)
     return (timer < sleep_time)
 end
 
-local function handle_sleep(dtime)
+local function handle_globalstep_sleep(dtime)
     timer        = (timer + dtime)
-    if is_sleeping(dtime) then return false end
+    if is_globalstep_sleeping(dtime) then return false end
     timer        = 0
     return true
 end
 
 minetest.register_globalstep(function(dtime)
-    if not handle_sleep(dtime) then return end
+    if not handle_globalstep_sleep(dtime) then return end
 
     --for _, player in ipairs(ia_names.get_all_actors()) do
     for _, player in ipairs(minetest.get_connected_players()) do

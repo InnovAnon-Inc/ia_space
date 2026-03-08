@@ -4,10 +4,8 @@
 -- TODO mesosphere
 -- TODO re-entry
 -- TODO handle world limits
--- FIXME two moons ?
 --
 -- TODO nodes.lua
--- TODO physics.lua
 -- TODO tides.lua
 -- TODO weather.lua
 
@@ -27,7 +25,6 @@ ia_space.colors                  = {
     mantle_glow   = "#330000", -- Deep magma glow
 }
 ia_space.atmosphere_colors       = {
-    -- FIXME in space, there's a half-horizon around the sun. it either needs to be mirrored below the horizon or completely gone
     day_sky   = ia_space.colors.sky_blue,     day_horizon   = ia_space.colors.horizon_pale,
     dawn_sky  = ia_space.colors.horizon_pale, dawn_horizon  = ia_space.colors.horizon_pale,
     night_sky = ia_space.colors.night_deep,   night_horizon = ia_space.colors.night_horizon,
@@ -82,6 +79,7 @@ ia_space.world_limits            = ia_space.get_world_limits()
 local modpath = minetest.get_modpath(modname)
 dofile(modpath..DIR_DELIM..'nodes.lua')
 dofile(modpath..DIR_DELIM..'mapgen.lua')
+dofile(modpath..DIR_DELIM..'gravity.lua')
 dofile(modpath..DIR_DELIM..'physics.lua')
 dofile(modpath..DIR_DELIM..'predicates.lua')
 dofile(modpath..DIR_DELIM..'tides.lua')

@@ -1,4 +1,6 @@
 -- ia_space/weather.lua
+-- FIXME in space, there's a half-horizon around the sun. it either needs to be mirrored below the horizon or completely gone
+-- FIXME two moons ? -- NOTE maybe fixed
 
 function ia_space.get_minimum_space_threshold()
     return (ia_space.thresholds.space - ia_space.thresholds.amplitude)
@@ -32,30 +34,63 @@ function ia_space.generate_climate_api_effects_space(params) -- VOID WEATHER (Sp
     return {
         ["climate_api:skybox"] = {
 	    cloud_data = {
-		density = 0,
-		height  = ia_space.world_limits.max,
+		ambient   = '#000000', -- TODO
+		color     = '#00000000', -- TODO
+		density   = 0,
+		height    = ia_space.world_limits.max,
+		thickness = 0,
             },
 	    light_data = {
-                shadow_intensity = 0.1,
 		saturation       = 1.1,
+                shadow_intensity = 0.1,
   	    },
+            moon_data  = {
+		scale   = 1,
+                texture = "moon.png",
+--		tonemap = "moon_tonemap.png",
+                visible = true,
+		tonemap = "moon_tonemap.png^[colorize:#000000:255",
+            },
             priority   = 100,
 	    sky_data   = {
 		base_color = ia_space.colors.space_black,
 		clouds     = false,
+		fog        = {
+		    fog_color    = {r=0, g=0, b=0},
+                    fog_distance = -1, -- Disable engine-default atmospheric fog
+                    fog_start    = -1,
+		},
 		sky_color  = {
-                    day_sky       = black,
-                    day_horizon   = black,
-                    dawn_sky      = black,
                     dawn_horizon  = black,
-                    night_sky     = black,
-                    night_horizon = black,
-                    fog_sun_tint  = black,
+                    dawn_sky      = black,
+                    day_horizon   = black,
+                    day_sky       = black,
                     fog_moon_tint = black,
+                    fog_sun_tint  = black,
+		    fog_tint_type = "none",
+		    indoors       = black,
+                    night_horizon = black,
+                    night_sky     = black,
                 },
                 type       = "plain",
 	    },
-        }
+            star_data  = {
+                count   = 1500,
+                color   = "#ffffff", -- TODO
+                scale   = 1,
+                visible = true,
+            },
+	    sun_data   = {
+                visible         = true,
+		scale           = 1,
+--		sunrise         = "",
+                sunrise_visible = false,
+                texture         = "sun.png",
+--		tonemap         = "sun_tonemap.png",
+		tonemap         = "sun_tonemap.png^[colorize:#000000:255", -- TODO
+                sunrise         = "sunrisebg.png^[colorize:#000000:255", -- TODO
+            },
+        },
     }
 end
 
@@ -67,27 +102,59 @@ function ia_space.generate_climate_api_effects_mantle(params) -- MANTLE WEATHER 
     return {
         ["climate_api:skybox"] = {
 	    cloud_data = {
-		density = 0,
-		height  = ia_space.world_limits.min,
+		ambient   = '#330000', -- TODO
+		color     = "#33000000", -- TODO
+		density   = 0,
+		height    = ia_space.world_limits.min,
+		thickness = 0,
             },
             light_data = {
+                saturation       = 1.5, -- Intense, oversaturated heat
                 shadow_intensity = 0.8,
-                saturation       = 1.5 -- Intense, oversaturated heat
             },
+            moon_data  = {
+		scale   = 0,
+		--texture =
+		--tonemap =
+		visible = false,
+	    },
             priority   = 100,
             sky_data   = {
 		base_color = ia_space.colors.mantle_glow,
 		clouds     = false,
+		fog        = {
+                    fog_color = {r=51, g=0, b=0}, -- Matching mantle_glow
+		    --fog_distance
+		    --fog_start
+                },
 		sky_color  = {
-                    day_sky       = glow,
-                    day_horizon   = glow,
-                    dawn_sky      = glow,
                     dawn_horizon  = glow,
-                    night_sky     = glow,
+                    dawn_sky      = glow,
+                    day_horizon   = glow,
+                    day_sky       = glow,
+		    --fog_moon_tint
+		    --fog_sun_tint
+                    fog_tint_type = 'none',
+		    indoors       = glow,
                     night_horizon = glow,
+                    night_sky     = glow,
                 },
                 type       = "plain",
             },
+            star_data  = {
+                count   = 0,
+                color   = "#33000000", -- TODO
+		scale   = 0,
+		visible = false,
+	    },
+	    sun_data   = {
+		sunrise_visible = false,
+		visible         = false,
+		sunrise         = "sunrisebg.png^[colorize:#330000:255", -- Mantle glow color -- TODO
+		scale           = 0,
+		--texture
+		--tonemap
+	    },
         }
     }
 end
