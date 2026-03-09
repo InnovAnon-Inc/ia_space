@@ -1,0 +1,87 @@
+-- ia_space/melting.lua
+
+ia_space.thermal_nodes = {
+    ["default:lava_source"]  =  5,
+    ["default:lava_flowing"] =  5,
+    ["default:fire"]         = 10,
+    ["default:ice"]          = -2,
+    ["default:snow"]         = -1,
+    ["default:snowblock"]    = -2,
+    -- TODO more
+}
+
+function ia_space.register_thermal_node(nodename, heat_value)
+    ia_space.thermal_nodes[nodename] = heat_value
+end
+
+-- Vicinity Modifier with Distance Scaling
+function ia_space.get_vicinity_modifier(pos)
+    local mod = 0
+    local radius = 8
+    local minp = vector.subtract(pos, radius)
+    local maxp = vector.add(pos, radius)
+
+    local thermal_list = {}
+    for name, _ in pairs(ia_space.thermal_nodes) do
+        table.insert(thermal_list, name)
+    end
+
+    local found_nodes = minetest.find_nodes_in_area(minp, maxp, {"group:igniter"})
+    local specific_nodes = minetest.find_nodes_in_area(minp, maxp, thermal_list)
+
+    local all_found = found_nodes
+    for _, p in ipairs(specific_nodes) do table.insert(all_found, p) end
+
+    for _, npos in ipairs(all_found) do
+        local node = minetest.get_node(npos)
+        local dist = vector.distance(pos, npos)
+        local distance_factor = 1 / math.max(1, dist)
+
+        local node_heat = ia_space.thermal_nodes[node.name] or 0
+        if node_heat == 0 and minetest.get_item_group(node.name, "igniter") > 0 then
+            node_heat = 5
+        end
+
+        mod = mod + (node_heat * distance_factor)
+    end
+
+    mod = mod / 5.0
+    return math.max(-50, math.min(mod, 80))
+end
+
+-- TODO climate_api/regional_weather-aware (maybe redundant)
+-- Environmental phase changes (Melt/Freeze)
+local function handle_phase_changes(pos, temp)
+    if temp > 100 then
+        local nodes = minetest.find_nodes_in_area(
+            vector.subtract(pos, 1), vector.add(pos, 1), {"group:ice", "group:snow"}
+        )
+        for _, p in ipairs(nodes) do
+            minetest.set_node(p, {name = "default:water_source"})
+        end
+    elseif temp < -20 then
+        local water = minetest.find_nodes_in_area(
+            vector.subtract(pos, 1), vector.add(pos, 1), {"group:water"}
+        )
+        for _, p in ipairs(water) do
+            minetest.set_node(p, {name = "default:ice"})
+        end
+    end
+end
+
+-- Main processing loop
+local timer = 0
+minetest.register_globalstep(function(dtime) -- NOTE might move to ia_hunger_ng
+    timer = timer + dtime
+    if timer < 1.0 then return end
+    timer = 0
+
+    for _, player in ipairs(minetest.get_connected_players()) do -- TODO probably not the right way to iterate
+        if player and player:get_pos() then
+            local t = ia_space.get_player_temp(player)
+            local name = player:get_player_name()
+
+            handle_phase_changes(player:get_pos(), t)
+        end
+    end
+end)

@@ -24,26 +24,10 @@ function ia_space.get_sealevel_offset()
     return ia_space.get_simulated_tide()
 end
 
-function ia_space.get_sealevel_threshold()
-    return (ia_space.thresholds.sealevel + ia_space.get_sealevel_offset())
-end
-
-function ia_space.get_space_threshold()
-    local tide_mod = ia_space.get_sealevel_threshold()
-    return (ia_space.thresholds.space + tide_mod)
-end
-
 --- Realistic Tidal Simulator
 -- Uses harmonic constituents to create a varied tide that changes
 -- amplitude based on the "Moon Phase" (simulated by time beats).
 
-function ia_space.get_gametime_minutes()
-    return minetest.get_gametime() / 60
-end
-
-function ia_space.get_gametime_hours()
-    return ia_space.get_gametime_minutes() / 60
-end
 
 function ia_space.get_m2_tide(time_hours)
     time_hours  = (time_hours or ia_space.get_gametime_hours())

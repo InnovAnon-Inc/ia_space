@@ -1,14 +1,5 @@
 -- ia_space/gravity.lua
 
--- Helper to get distance from planetary "center"
--- Assuming sealevel is the surface and we want gravity to hit 0 at the world bottom
-function ia_space.get_planetary_radius()
-    local surface = ia_space.thresholds.sealevel
-    local center  = ia_space.world_limits.min
-    assert(surface > center)
-    return math.abs(surface - center)
-end
-
 function ia_space.calculate_gravity_multiplier_crust(pos)
     -- If we are in the "Crust" (between sealevel and mantle threshold)
     -- Gravity actually increases slightly as we get closer to the heavy core

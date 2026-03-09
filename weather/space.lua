@@ -2,6 +2,8 @@
 -- FIXME in space, there's a half-horizon around the sun. it either needs to be mirrored below the horizon or completely gone
 -- FIXME two moons ? -- NOTE maybe fixed
 
+-- TODO need an earth 
+
 function ia_space.generate_climate_api_effects_space(params) -- VOID WEATHER (Space)
     assert(minetest.get_modpath('climate_api'))
     local pos   = {x = 0, y = params.height, z = 0}

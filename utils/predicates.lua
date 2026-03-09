@@ -330,7 +330,7 @@ function ia_space.is_head_in_vacuum(pos)
     assert(pos.x ~= nil, 'missing x-value')
     assert(pos.y ~= nil, 'missing y-value')
     assert(pos.z ~= nil, 'missing z-value')
-    local head = vector.add(pos, {x=0, y=1.5, z=0})
+    local head = ia_space.get_head(pos) -- TODO round ?
     return ia_space.is_in_vacuum(head)
 end
 
@@ -346,6 +346,93 @@ function ia_space.is_body_and_head_in_vacuum(pos)
     if not ia_space.is_in_vacuum     (pos) then return false end
     if not ia_space.is_head_in_vacuum(pos) then return false end
     return true
+end
+
+--
+--
+--
+
+function ia_space.is_node_ignore(node)
+    if (node == nil)                 then return true end
+    return (node.name == ia_space.nodes.ignore)
+end
+function ia_space.is_node_air(node)
+    if ia_space.is_node_ignore(node) then return nil end
+    return (node.name == ia_space.nodes.air)
+end
+function ia_space.is_node_vacuum(node)
+    if ia_space.is_node_ignore(node) then return nil end
+    return (node.name == ia_space.nodes.vacuum)
+end
+function ia_space.is_node_air_or_vacuum(node)
+    local is_air = ia_space.is_node_air(node)
+    if (is_air ~= false)             then return is_air end
+    return (node.name == ia_space.nodes.vacuum)
+end
+
+--
+--
+--
+
+function ia_space.is_ceiling_valid(pos, radius)
+    assert(pos    ~= nil)
+    assert(radius == nil or radius == tonumber(radius))
+    radius        = (radius or 15) -- TODO move to settings
+    ia_space.iter_radius_nodes(pos, radius, function(node, v, dv)
+        if ia_space.is_node_air_or_vacuum(node) then return false end
+	return nil
+    end)
+end
+
+function ia_space.is_indoors(pos, delta, height, radius)
+    assert(pos    ~= nil)
+    assert(delta  == nil or delta  == tonumber(delta))
+    assert(height == nil or height == tonumber(height))
+    if ia_space.is_in_vacuum(pos)                           then return false end
+    if ia_space.is_daylight_obscured_by_ceiling(pos, delta) then return false end
+    -- TODO use head pos ?
+    local ceiling = ia_space.find_ceiling(pos, height, radius)
+    return (ceiling ~= nil)
+end
+
+--
+--
+--
+
+function ia_space.is_daylight_vanilla(pos)
+--    assert(not minetest.get_modpath('climate_api'))
+    assert(pos ~= nil)
+    local time        = minetest.get_timeofday()
+    assert(time ~= nil)
+    -- Minetest TimeofDay: 0.5 is Noon, 0.0/1.0 is Midnight.
+    -- The sun is generally "up" between 0.21 and 0.79.
+    return (time > 0.21 and time < 0.79)
+end
+
+function ia_space.is_light_lt_daylight(pos, time, delta) -- TODO is it useful ?
+    assert(pos   ~= nil)
+    assert(time  == nil or time  == tonumber(time))
+    assert(delta == nil or delta == tonumber(delta))
+    local light    = ia_space.climate_api_influence_light(pos)
+    local daylight = ia_space.climate_api_influence_daylight(pos, time)
+    delta          = (delta or 0)
+    daylight       = (daylight - delta)
+    return (light < daylight)
+end
+
+function ia_space.is_daylight_lt(pos, value, time)
+    assert(pos   ~= nil)
+    assert(value == nil or value == tonumber(value))
+    assert(time  == nil or time  == tonumber(time))
+    local daylight = ia_space.climate_api_influence_daylight(pos, time)
+    return (daylight < value)
+end
+
+function ia_space.is_daylight_obscured_by_ceiling(pos, delta)
+    assert(pos   ~= nil)
+    assert(delta == nil or delta == tonumber(delta))
+    delta      = (delta or 1)
+    return ia_space.is_daylight_lt(pos, 15 - delta, nil)
 end
 
 --

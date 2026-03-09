@@ -1,0 +1,78 @@
+
+-- ia_space/thermal/medium.lua
+-- function ia_space.calculate_medium_celsius_delta(player)
+
+-- ia_space/thermal/armor.lua
+function ia_space.calculate_thermal_protection(player)
+    local armor_groups = player:get_armor_groups()
+    local mod = 0
+
+    -- Example: Technic radiation suit provides massive thermal damping
+    if armor_groups.radiation_suit then
+        -- This doesn't change the temp, but we use it in the damage calc later
+    end
+
+    -- Add logic for active heaters/coolers in the vicinity
+    return mod
+end
+
+-- ia_space/thermal/damage.lua
+
+minetest.register_globalstep(function(dtime)
+    -- Run every 1 second
+    timer = timer + dtime
+    if timer < 1 then return end
+    timer = 0
+
+    for _, player in ipairs(minetest.get_connected_players()) do
+        local temp = ia_space.get_effective_player_temperature(player)
+
+        -- High Temperature Damage (> 50C)
+        if temp > 50 then
+            local damage = math.floor((temp - 50) / 10)
+            if damage > 0 then
+                player:set_hp(player:get_hp() - damage)
+                minetest.sound_play("radiant_damage_sizzle", {to_player=player:get_player_name()})
+            end
+
+        -- Low Temperature Damage (< -30C)
+        elseif temp < -30 then
+            local damage = math.floor((math.abs(temp) - 30) / 15)
+            if damage > 0 then
+                player:set_hp(player:get_hp() - damage)
+                -- Frostbite sound or screen effect
+            end
+        end
+
+        -- Trigger phase changes (Melt/Freeze) around the player
+        handle_phase_changes(player:get_pos(), temp)
+    end
+end)
+
+
+
+
+
+
+-- ia_space/thermal/armor.lua
+
+function ia_space.calculate_thermal_protection(player)
+    local name = player:get_player_name()
+    local armor_groups = player:get_armor_groups()
+    local protection = 0 -- 0.0 to 1.0
+
+    -- Standard "fire" armor group provides 0.5 protection per 100 points
+    if armor_groups.fire then
+        protection = math.max(protection, (armor_groups.fire / 200))
+    end
+
+    -- Technic Radiation Suit (Near-perfect thermal insulation)
+    if armor_groups.radiation_suit then
+        protection = math.max(protection, 0.95)
+    end
+
+    -- TODO: Check Technic Battery level? If suit is out of power, protection drops.
+    -- if technic.get_RE_charge(itemstack) == 0 then protection = 0.1 end
+
+    return math.min(0.99, protection) -- Never 100% to allow for extreme edge cases
+end
