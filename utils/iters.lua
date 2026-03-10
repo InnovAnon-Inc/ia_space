@@ -1,15 +1,19 @@
 -- ia_space/iters.lua
+-- TODO move to ia_util
 
-function ia_space.iter_direction_offsets(pos, direction, height, cb)
+function ia_space.iter_direction_offsets(pos, direction, height, cb) -- TODO reversible direction
     assert(pos        ~= nil)
     assert(direction  ~= nil)
-    assert(height     ~= nil)
+    --assert(height     ~= nil)
     assert(cb         ~= nil)
-    for d = 1, height do
+    --for d = 1, height do
+    local d               = 1
+    while (height == nil or d <= height) do
         local offset      = table.copy(ia_space.world_limits.origin)
 	offset[direction] = d
         local val         = cb(offset)
         if (val ~= nil) then return val end
+	d                 = (d + 1)
     end
     return nil
 end
@@ -17,7 +21,7 @@ end
 function ia_space.iter_direction_positions(pos, direction, height, cb)
     assert(pos        ~= nil)
     assert(direction  ~= nil)
-    assert(height     ~= nil)
+    --assert(height     ~= nil)
     assert(cb         ~= nil)
     _cb = function(offset)
 	assert(offset ~= nil)
@@ -30,7 +34,7 @@ end
 function ia_space.iter_direction_nodes(pos, direction, height, cb)
     assert(pos        ~= nil)
     assert(direction  ~= nil)
-    assert(height     ~= nil)
+    --assert(height     ~= nil)
     assert(cb         ~= nil)
     _cb = function(_pos, offset)
 	assert(_pos   ~= nil)
