@@ -110,21 +110,21 @@ minetest.register_abm({
 	local in_mantle      = (                not is_mantle)
 
 
-        -- BEHAVIOR LOGIC
-        if node.name == "air" then
-            if is_void and vac_count > 0 then
-                -- In the Void, any contact with vacuum deletes air instantly.
-                minetest.set_node(pos, {name = ia_space.nodes.vacuum})
-            elseif in_meso and vac_count > 4 then
-                -- In the Mesosphere, air is thin; it needs more support to stay.
-                minetest.set_node(pos, {name = ia_space.nodes.vacuum})
-            end
-        else -- node is vacuum
-            if not in_meso and not is_void and air_density > 0.3 then
-                -- On Earth (Crust), air pressure crushes vacuum pockets.
-                minetest.set_node(pos, {name = ia_space.nodes.air})
-            end
-        end
+--        -- BEHAVIOR LOGIC
+--        if node.name == "air" then
+--            if is_void and vac_count > 0 then
+--                -- In the Void, any contact with vacuum deletes air instantly.
+--                minetest.set_node(pos, {name = ia_space.nodes.vacuum})
+--            elseif in_meso and vac_count > 4 then
+--                -- In the Mesosphere, air is thin; it needs more support to stay.
+--                minetest.set_node(pos, {name = ia_space.nodes.vacuum})
+--            end
+--        else -- node is vacuum
+--            if not in_meso and not is_void and air_density > 0.3 then
+--                -- On Earth (Crust), air pressure crushes vacuum pockets.
+--                minetest.set_node(pos, {name = ia_space.nodes.air})
+--            end
+--        end
     end,
 })
 
