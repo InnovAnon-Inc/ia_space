@@ -2,19 +2,6 @@
 -- ia_space/thermal/medium.lua
 -- function ia_space.calculate_medium_celsius_delta(player)
 
--- ia_space/thermal/armor.lua
-function ia_space.calculate_thermal_protection(player)
-    local armor_groups = player:get_armor_groups()
-    local mod = 0
-
-    -- Example: Technic radiation suit provides massive thermal damping
-    if armor_groups.radiation_suit then
-        -- This doesn't change the temp, but we use it in the damage calc later
-    end
-
-    -- Add logic for active heaters/coolers in the vicinity
-    return mod
-end
 
 -- ia_space/thermal/damage.lua
 
@@ -54,25 +41,4 @@ end)
 
 
 
--- ia_space/thermal/armor.lua
 
-function ia_space.calculate_thermal_protection(player)
-    local name = player:get_player_name()
-    local armor_groups = player:get_armor_groups()
-    local protection = 0 -- 0.0 to 1.0
-
-    -- Standard "fire" armor group provides 0.5 protection per 100 points
-    if armor_groups.fire then
-        protection = math.max(protection, (armor_groups.fire / 200))
-    end
-
-    -- Technic Radiation Suit (Near-perfect thermal insulation)
-    if armor_groups.radiation_suit then
-        protection = math.max(protection, 0.95)
-    end
-
-    -- TODO: Check Technic Battery level? If suit is out of power, protection drops.
-    -- if technic.get_RE_charge(itemstack) == 0 then protection = 0.1 end
-
-    return math.min(0.99, protection) -- Never 100% to allow for extreme edge cases
-end

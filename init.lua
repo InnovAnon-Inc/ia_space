@@ -16,12 +16,14 @@
 -- TODO vacuum node abm
 -- TODO tides
 -- TODO temperature abm
+-- TODO radiation damage
 
 assert(minetest.get_modpath('ia_util'))
 assert(ia_util ~= nil)
 local modname                    = minetest.get_current_modname() or "ia_space"
 local storage                    = minetest.get_mod_storage()
 ia_space                         = {}
+ia_space.mod                     = 'ia'
 
 function ia_space.get_mapgen_setting_number(key, default)
     local value = minetest.get_mapgen_setting(key)

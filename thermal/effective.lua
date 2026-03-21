@@ -1,0 +1,52 @@
+-- NOTE see ia_space/thermal.lua
+---- ia_space/thermal/effective.lua
+--
+----[[
+--    Calculates the final temperature a player "feels" by aggregating:
+--    1. Cosmological Base (Space vs. Atmosphere vs. Depth)
+--    2. Medium Delta (Conduction/Convection from immediate nodes)
+--    3. Vicinity Delta (Radiant heat/flux from nearby sources)
+--    4. Kinetic Delta (Re-entry friction/heating)
+--    5. Armor Protection (Insulation factor)
+--]]
+--function ia_space.get_effective_player_temperature(player)
+--    assert(player ~= nil)
+--    local pos = player:get_pos()
+--    
+--    -- 1. Get the baseline temperature based on location in the universe
+--    -- This handles space sunlight/shadow, altitude cooling, and mantle warming.
+--    local base_celsius = ia_space.calculate_cosmologically_aware_celsius(pos)
+--    
+--    -- 2. Calculate deltas from different thermal influences
+--    -- Medium: Conduction/Convection from nodes the player is touching or very near.
+--    local medium_delta = ia_space.calculate_medium_celsius_delta(player) or 0
+--    
+--    -- Vicinity: Radiant heat from emitters (lava, torches, heaters) handled by radiant_damage or vanilla search.
+--    local vicinity_delta = ia_space.calculate_vicinity_celsius_delta(pos, player) or 0
+--    
+--    -- Kinetic: Heating from high velocity movement through atmosphere (re-entry).
+--    local kinetic_delta = ia_space.calculate_kinetic_celsius_delta_for_player(player) or 0
+--
+--    -- 3. Calculate the Raw External Temperature
+--    -- We treat the cosmological base as the starting point, then add environmental deltas.
+--    local external_temp = base_celsius + medium_delta + vicinity_delta + kinetic_delta
+--
+--    -- 4. Apply Thermal Protection (Armor/Suits)
+--    -- protection is a value from 0.0 to 0.99
+--    local protection = ia_space.calculate_thermal_protection(player)
+--    
+--    -- The "Effective" temperature is the difference between the external temp 
+--    -- and a comfortable room temperature (ia_space.temperatures.default), 
+--    -- reduced by the armor's insulation factor.
+--    local neutral_temp = ia_space.temperatures.default or 20
+--    local diff = external_temp - neutral_temp
+--    
+--    -- If protection is 0.9, only 10% of the temperature deviation reaches the player.
+--    local effective_temp = neutral_temp + (diff * (1 - protection))
+--
+--    -- Add logging for debugging if the values seem erratic [cite: 2026-02-28]
+--    -- minetest.log("action", string.format("[ia_space] Player: %s, Base: %d, Ext: %d, Eff: %d, Prot: %f", 
+--    --     player:get_player_name(), base_celsius, external_temp, effective_temp, protection))
+--
+--    return effective_temp
+--end

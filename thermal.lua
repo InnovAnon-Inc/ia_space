@@ -61,6 +61,34 @@ function ia_space.calculate_effective_celsius_for_player(player)
     return ia_space.lerp(raw, ia_space.temperatures.default, protection)
 end
 
+function ia_space.is_celsius_above_safe_threshold(temp)
+    return (temp > 50)
+end
+function ia_space.is_celsius_below_safe_threshold(temp)
+    return (temp < -30)
+end
+function ia_space.calculate_damage_for_celsius_above_safe_threshold(temp)
+    assert(ia_space.is_celsius_above_safe_threshold(temp))
+    return math.floor((         temp  - 50) / 10)
+end
+function ia_space.calculate_damage_for_celsius_below_safe_threshold(temp)
+    assert(ia_space.is_celsius_below_safe_threshold(temp))
+    return math.floor((math.abs(temp) - 30) / 15)
+end
+function ia_space.calculate_damage_for_celsius_outside_safe_threshold(temp)
+    if ia_space.is_celsius_above_safe_threshold(temp) then return ia_space.calculate_damage_for_celsius_above_safe_threshold(temp), 'above' end
+    if ia_space.is_celsius_below_safe_threshold(temp) then return ia_space.calculate_damage_for_celsius_below_safe_threshold(temp), 'below' end
+    return 0
+end
+function ia_space.handle_damage_for_celsius_outside_safe_threshold(player)
+    local temperature    = ia_space.calculate_effective_celsius_for_player(player)
+    local damage, reason = ia_space.calculate_damage_for_celsius_outside_safe_threshold(temperature)
+    assert(damage >= 0)
+    if (damage == 0) then return 0, nil end
+    local hp     = player:get_hp()
+    player:set_hp(hp - damage)
+    return damage, reason
+end
 
 
 
